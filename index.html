@@ -3,12 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Firebase + ChatGPT 데이터 관리</title>
+  <title>AI 외국어 첨삭기</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
+    * { box-sizing: border-box; }
     body {
       margin: 0;
       min-height: 100vh;
@@ -16,7 +13,6 @@
       font-family: Arial, sans-serif;
       color: #333;
     }
-
     .container {
       width: min(900px, 92%);
       margin: 40px auto;
@@ -25,42 +21,24 @@
       padding: 28px;
       box-shadow: 0 15px 35px rgba(0, 0, 0, 0.16);
     }
-
-    h1 {
-      margin: 0 0 8px;
-      text-align: center;
-      font-size: 28px;
-    }
-
-    .subtitle {
-      text-align: center;
-      color: #777;
-      margin-bottom: 28px;
-      font-size: 14px;
-    }
-
-    /* 입력창 구조: 질문 입력 칸을 넓히기 위해 1fr auto로 변경 */
-    .form-box {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 10px;
-      margin-bottom: 22px;
-    }
-
-    input {
+    h1 { margin: 0 0 8px; text-align: center; font-size: 28px; }
+    h2 { margin-top: 0; font-size: 22px; }
+    .subtitle { text-align: center; color: #777; margin-bottom: 28px; font-size: 14px; }
+    .auth-box { max-width: 420px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+    input, select, textarea {
       height: 46px;
       padding: 0 14px;
       border: 1px solid #ddd;
       border-radius: 12px;
       font-size: 15px;
       outline: none;
+      font-family: Arial, sans-serif;
     }
-
-    input:focus {
+    textarea { height: 100px; padding: 12px; resize: vertical; }
+    input:focus, select:focus, textarea:focus {
       border-color: #42a5f5;
       box-shadow: 0 0 0 3px rgba(66, 165, 245, 0.15);
     }
-
     button {
       border: none;
       border-radius: 12px;
@@ -71,365 +49,286 @@
       transition: 0.15s;
       font-weight: bold;
     }
-
-    button:hover {
-      transform: translateY(-2px);
-      opacity: 0.9;
-    }
-
-    button:disabled {
-      cursor: not-allowed;
-      opacity: 0.6;
-      transform: none;
-    }
-
-    .add-btn {
-      background: #42a5f5;
-      color: white;
-    }
-
-    .refresh-btn {
-      background: #66bb6a;
-      color: white;
-      margin-bottom: 16px;
-    }
-
-    .edit-btn {
-      background: #ffca28;
-      color: #333;
-    }
-
-    .delete-btn {
-      background: #ef5350;
-      color: white;
-    }
-
-    .save-btn {
-      background: #7e57c2;
-      color: white;
-    }
-
-    .cancel-btn {
-      background: #b0bec5;
-      color: white;
-    }
-
-    .status {
-      min-height: 24px;
-      margin-bottom: 14px;
-      color: #555;
-      font-size: 14px;
-      font-weight: bold;
-    }
-
-    .list {
+    button:hover { transform: translateY(-2px); opacity: 0.9; }
+    .login-btn { background: #42a5f5; color: white; }
+    .signup-btn { background: #7e57c2; color: white; }
+    .logout-btn { background: #455a64; color: white; }
+    .add-btn { background: #42a5f5; color: white; }
+    .top-bar {
       display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .item {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 12px;
+      justify-content: space-between;
       align-items: center;
-      padding: 16px;
+      gap: 12px;
+      margin-bottom: 22px;
+      padding: 14px;
       border-radius: 16px;
       background: #f7f9fb;
-      border: 1px solid #edf1f5;
     }
-
-    .item-title {
-      margin: 0 0 8px;
-      font-size: 16px;
-      font-weight: bold;
-      color: #1e88e5;
-    }
-
-    .item-content {
-      margin: 0;
-      color: #333;
-      line-height: 1.6;
-      white-space: pre-wrap;
-      word-break: break-all;
-      background: #ffffff;
-      padding: 12px;
-      border-radius: 8px;
-      border: 1px solid #eef2f5;
-    }
-
-    .item-date {
-      margin-top: 8px;
-      font-size: 12px;
-      color: #999;
-    }
-
-    .item-actions {
-      display: flex;
-      gap: 8px;
-    }
-
-    .edit-box {
-      display: grid;
-      grid-template-columns: 1fr 2fr auto auto;
-      gap: 8px;
-      width: 100%;
-    }
-
-    .empty {
-      text-align: center;
-      padding: 30px;
-      color: #888;
-      background: #f7f9fb;
-      border-radius: 16px;
-    }
-
+    .user-info { font-size: 14px; color: #555; word-break: break-all; }
+    .form-box { display: grid; grid-template-columns: 1.5fr 3fr auto; gap: 10px; margin-bottom: 22px; }
+    
+    /* 결과창 디자인 수정 */
+    .result-card { padding: 20px; border-radius: 16px; background: #f7f9fb; border: 1px solid #edf1f5; margin-top: 20px; }
+    .res-title { font-weight: bold; margin: 10px 0 4px; color: #455a64; }
+    .corrected-text { color: #2e7d32; font-weight: bold; font-size: 18px; background: #e8f5e9; padding: 10px; border-radius: 8px; margin: 4px 0; }
+    .error-list { color: #c62828; padding-left: 20px; line-height: 1.6; }
+    
+    .hidden { display: none; }
+    .notice { max-width: 620px; margin: 20px auto 0; padding: 14px; border-radius: 14px; background: #fff8e1; color: #6d4c41; font-size: 14px; line-height: 1.6; }
     @media (max-width: 700px) {
-      .form-box,
-      .item,
-      .edit-box {
-        grid-template-columns: 1fr;
-      }
-
-      .item-actions {
-        justify-content: flex-end;
-      }
+      .form-box, .top-bar { grid-template-columns: 1fr; flex-direction: column; align-items: stretch; }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>🤖 Firebase + ChatGPT 데이터 관리</h1>
-    <div class="subtitle">질문을 던지면 ChatGPT가 답변하고, 그 결과를 Firebase Realtime Database에 저장합니다.</div>
+    <h1>🌐 AI 외국어 문장 교정기</h1>
+    <div class="subtitle">Firebase Authentication + ChatGPT(GAS Proxy) + Realtime Database 연동</div>
 
-    <div class="form-box">
-      <input id="titleInput" type="text" placeholder="ChatGPT에게 던질 질문이나 첨삭할 문장을 입력하세요..." />
-      <button class="add-btn" id="addBtn" onclick="addData()">AI 답변 생성 및 저장</button>
-    </div>
+    <section id="authSection">
+      <div class="auth-box">
+        <h2>로그인 / 회원가입</h2>
+        <input id="emailInput" type="email" placeholder="이메일" />
+        <input id="passwordInput" type="password" placeholder="비밀번호 6자리 이상" />
+        <button class="login-btn" id="loginBtn">로그인</button>
+        <button class="signup-btn" id="signupBtn">회원가입</button>
+      </div>
+      <div class="notice">
+        처음 사용하는 이메일은 회원가입을 먼저 누르세요.<br />
+        이미 가입한 이메일은 로그인 버튼을 누르면 됩니다.
+      </div>
+    </section>
 
-    <button class="refresh-btn" onclick="loadData()">데이터 새로고침</button>
-    <div id="status" class="status"></div>
-    <div id="dataList" class="list"></div>
+    <section id="mainSection" class="hidden">
+      <div class="top-bar">
+        <div class="user-info">
+          로그인 계정: <strong id="userEmail"></strong>
+        </div>
+        <button class="logout-btn" id="logoutBtn">로그아웃</button>
+      </div>
+
+      <div class="form-box">
+        <select id="langSelect">
+          <option value="English">영어 (English)</option>
+          <option value="Japanese">일본어 (日本語)</option>
+        </select>
+        <textarea id="textInput" placeholder="분석할 외국어 문장을 입력하세요..."></textarea>
+        <button class="add-btn" id="analyzeBtn">AI 첨삭 시작</button>
+      </div>
+
+      <div id="resultSection" class="result-card hidden">
+        <h2>🔍 AI 분석 결과 (Database 자동 저장됨)</h2>
+        <div class="res-title">입력한 원문</div>
+        <div id="resOriginal" style="color: #555; font-style: italic; margin-bottom: 15px;"></div>
+        
+        <div class="res-title">✨ AI 수정본</div>
+        <div id="resCorrected" class="corrected-text"></div>
+        
+        <div class="res-title">❌ 틀린 이유 분석</div>
+        <ul id="resErrors" class="error-list"></ul>
+      </div>
+    </section>
   </div>
 
-  <script>
-    // 1. Firebase Realtime Database URL
-    const DATABASE_URL = 'https://kang-f4e85-default-rtdb.firebaseio.com';
-    const DATA_PATH = 'items';
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      signOut,
+      onAuthStateChanged
+    } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
-    // 2. Google Apps Script Web App URL (ChatGPT 연동용)
+    // 네 프로젝트의 Firebase 환경설정 그대로 매핑
+    const firebaseConfig = {
+      apiKey: 'AIzaSyDO-v52Ehwphh5gW0WBzu9_DliMhOzy4Yo',
+      authDomain: 'kang-f4e85.firebaseapp.com',
+      databaseURL: 'https://kang-f4e85-default-rtdb.firebaseio.com',
+      projectId: 'kang-f4e85',
+      storageBucket: 'kang-f4e85.firebasestorage.app',
+      messagingSenderId: '107057126084',
+      appId: '1:107057126084:web:30f7bcb3f25dd2aa4a0791',
+      measurementId: 'G-DJ52YTYQZM'
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // 💡 ChatGPT 연동용 구글 웹 앱 스크립트 주소
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxTmD_aKFktnu5BcmOj0x84D15A5qOEkAbpoyJ7DEGzJR7UayIGwKLDL7nFhU3hbB_wVw/exec';
 
-    const titleInput = document.getElementById('titleInput');
-    const dataList = document.getElementById('dataList');
-    const statusBox = document.getElementById('status');
-    const addBtn = document.getElementById('addBtn');
+    const authSection = document.getElementById('authSection');
+    const mainSection = document.getElementById('mainSection');
+    const resultSection = document.getElementById('resultSection');
 
-    function setStatus(message) {
-      statusBox.textContent = message;
+    const emailInput = document.getElementById('emailInput');
+    const passwordInput = document.getElementById('passwordInput');
+    const loginBtn = document.getElementById('loginBtn');
+    const signupBtn = document.getElementById('signupBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    const userEmail = document.getElementById('userEmail');
+    const langSelect = document.getElementById('langSelect');
+    const textInput = document.getElementById('textInput');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    
+    const resOriginal = document.getElementById('resOriginal');
+    const resCorrected = document.getElementById('resCorrected');
+    const resErrors = document.getElementById('resErrors');
+
+    let currentUser = null;
+
+    function getEmailAndPassword() {
+      const email = emailInput.value.trim();
+      const password = passwordInput.value.trim();
+      if (!email || !password) { alert('이메일과 비밀번호를 모두 입력해주세요.'); return null; }
+      if (password.length < 6) { alert('비밀번호는 6자리 이상이어야 합니다.'); return null; }
+      return { email, password };
     }
 
-    function getEndpoint(path = '') {
-      const cleanPath = path ? `/${path}` : '';
-      return `${DATABASE_URL}/${DATA_PATH}${cleanPath}.json`;
-    }
-
-    // [Read] Firebase에서 전체 기록 불러오기
-    async function loadData() {
+    // 회원가입
+    signupBtn.addEventListener('click', async () => {
+      const account = getEmailAndPassword();
+      if (!account) return;
       try {
-        setStatus('🔄 Firebase에서 데이터를 불러오는 중...');
+        await createUserWithEmailAndPassword(auth, account.email, account.password);
+        alert('회원가입이 완료되었습니다.');
+      } catch (error) { alert(getKoreanErrorMessage(error.code)); }
+    });
 
-        const response = await fetch(getEndpoint());
-        const data = await response.json();
-
-        renderData(data);
-        setStatus('✅ 최신 데이터를 불러왔습니다.');
-      } catch (error) {
-        console.error(error);
-        setStatus('❌ 데이터 불러오기 실패. Firebase Rule 설정을 확인하세요.');
-      }
-    }
-
-    // [Create] ChatGPT 답변을 생성하고, 완성되면 Firebase에 동시 저장
-    async function addData() {
-      const question = titleInput.value.trim();
-
-      if (!question) {
-        alert('질문을 입력해주세요.');
-        return;
-      }
-
+    // 로그인
+    loginBtn.addEventListener('click', async () => {
+      const account = getEmailAndPassword();
+      if (!account) return;
       try {
-        // UI 비활성화 및 상태 표시
-        addBtn.disabled = true;
-        addBtn.textContent = '생성 중...';
-        setStatus('🧠 1단계: Apps Script를 통해 ChatGPT 답변을 생성하고 있습니다...');
+        await signInWithEmailAndPassword(auth, account.email, account.password);
+      } catch (error) { alert(getKoreanErrorMessage(error.code)); }
+    });
 
-        // 1. ChatGPT API 호출 (Apps Script 경유)
-        const aiResponse = await fetch(APPS_SCRIPT_URL, {
-          method: 'POST',
-          body: JSON.stringify({ question: question })
-        });
-        const aiData = await aiResponse.json();
+    // 로그아웃
+    logoutBtn.addEventListener('click', async () => {
+      try { await signOut(auth); } catch (error) { alert('로그아웃에 실패했습니다.'); }
+    });
 
-        if (aiData.error) {
-          throw new Error(aiData.error);
-        }
-
-        const gptAnswer = aiData.answer || '답변을 가져오지 못했습니다.';
-
-        // 2. Firebase에 저장할 데이터 패키징
-        setStatus('💾 2단계: 생성된 답변을 Firebase Database에 저장하는 중...');
-        const newItem = {
-          title: `질문: ${question}`,   // 제목 칸에 질문 배치
-          content: gptAnswer,          // 내용 칸에 ChatGPT 답변 배치
-          createdAt: new Date().toLocaleString('ko-KR')
-        };
-
-        // 3. Firebase REST API로 전송 (POST)
-        await fetch(getEndpoint(), {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(newItem)
-        });
-
-        // 완료 후 입력창 리셋 및 리스트 갱신
-        titleInput.value = '';
-        await loadData();
-      } catch (error) {
-        console.error(error);
-        setStatus('❌ 작업 중 오류가 발생했습니다: ' + error.message);
-      } finally {
-        addBtn.disabled = false;
-        addBtn.textContent = 'AI 답변 생성 및 저장';
-      }
-    }
-
-    // [Delete] Firebase에서 데이터 삭제
-    async function deleteData(id) {
-      const isConfirmed = confirm('이 데이터 기록을 Firebase에서 정말 삭제하시겠습니까?');
-      if (!isConfirmed) return;
-
-      try {
-        setStatus('🗑️ Firebase에서 데이터를 삭제하는 중...');
-
-        await fetch(getEndpoint(id), {
-          method: 'DELETE'
-        });
-
-        await loadData();
-      } catch (error) {
-        console.error(error);
-        setStatus('❌ 데이터 삭제에 실패했습니다.');
-      }
-    }
-
-    // [Update] Firebase 데이터 수정 반영
-    async function updateData(id) {
-      const editTitle = document.getElementById(`edit-title-${id}`).value.trim();
-      const editContent = document.getElementById(`edit-content-${id}`).value.trim();
-
-      if (!editTitle || !editContent) {
-        alert('수정할 제목과 내용을 모두 입력해주세요.');
-        return;
-      }
-
-      const updatedItem = {
-        title: editTitle,
-        content: editContent,
-        updatedAt: new Date().toLocaleString('ko-KR')
-      };
-
-      try {
-        setStatus('📝 Firebase 데이터를 수정하는 중...');
-
-        await fetch(getEndpoint(id), {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(updatedItem)
-        });
-
-        await loadData();
-      } catch (error) {
-        console.error(error);
-        setStatus('❌ 데이터 수정에 실패했습니다.');
-      }
-    }
-
-    // 화면에 Firebase 데이터 뿌려주기
-    function renderData(data) {
-      dataList.innerHTML = '';
-
-      if (!data) {
-        dataList.innerHTML = '<div class="empty">아직 저장된 질문/답변 기록이 없습니다.</div>';
-        return;
-      }
-
-      const entries = Object.entries(data).reverse();
-
-      entries.forEach(([id, item]) => {
-        const div = document.createElement('div');
-        div.className = 'item';
-        div.id = `item-${id}`;
-
-        div.innerHTML = `
-          <div>
-            <p class="item-title">${escapeHTML(item.title || '')}</p>
-            <p class="item-content">${escapeHTML(item.content || '')}</p>
-            <div class="item-date">
-              등록: ${item.createdAt || '-'}
-              ${item.updatedAt ? ` / 수정: ${item.updatedAt}` : ''}
-            </div>
-          </div>
-          <div class="item-actions">
-            <button class="edit-btn" onclick="showEditForm('${id}', '${escapeForAttribute(item.title || '')}', '${escapeForAttribute(item.content || '')}')">수정</button>
-            <button class="delete-btn" onclick="deleteData('${id}')">삭제</button>
-          </div>
-        `;
-
-        dataList.appendChild(div);
-      });
-    }
-
-    function showEditForm(id, title, content) {
-      const itemBox = document.getElementById(`item-${id}`);
-
-      itemBox.innerHTML = `
-        <div class="edit-box">
-          <input id="edit-title-${id}" type="text" value="${title}" />
-          <input id="edit-content-${id}" type="text" value="${content}" />
-          <button class="save-btn" onclick="updateData('${id}')">저장</button>
-          <button class="cancel-btn" onclick="loadData()">취소</button>
-        </div>
-      `;
-    }
-
-    function escapeHTML(text) {
-      return String(text)
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#039;');
-    }
-
-    function escapeForAttribute(text) {
-      return escapeHTML(text).replaceAll('`', '&#096;');
-    }
-
-    // Enter 키로 데이터 추가 활성화
-    titleInput.addEventListener('keydown', function(event) {
-      if (event.key === 'Enter') {
-        addData();
+    // 인증 상태 감지
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        currentUser = user;
+        authSection.classList.add('hidden');
+        mainSection.classList.remove('hidden');
+        userEmail.textContent = user.email;
+        emailInput.value = '';
+        passwordInput.value = '';
+      } else {
+        currentUser = null;
+        authSection.classList.remove('hidden');
+        mainSection.classList.add('hidden');
+        resultSection.classList.add('hidden');
+        userEmail.textContent = '';
       }
     });
 
-    // 앱 로드 시 자동 실행
-    loadData();
+    // 🔥 핵심: ChatGPT 데이터 추출 및 Realtime Database 동시 연동 로직
+    analyzeBtn.addEventListener('click', async () => {
+      if (!currentUser) return alert('로그인이 필요합니다.');
+
+      const text = textInput.value.trim();
+      const language = langSelect.value;
+
+      if (!text) return alert('분석할 문장을 입력해주세요.');
+
+      analyzeBtn.innerText = 'AI 분석 중...';
+      analyzeBtn.disabled = true;
+
+      // 1. ChatGPT가 항상 일정한 JSON 구조로 대답하도록 특수 프롬프트 구성
+      const structuredPrompt = `너는 외국어 첨삭 교사야. 사용자가 입력한 ${language} 문장을 분석해서 오직 아래 포맷의 JSON 데이터로만 답변해줘. 마크다운 기호나 다른 주석은 절대 붙이지 마.
+
+{
+  "original": "사용자 원문 그대로",
+  "corrected": "교정 완료된 자연스러운 문장",
+  "errors": ["한국어로 풀이한 에러나 자연스럽지 않은 이유 분석 1", "이유 분석 2"]
+}
+
+만약 틀린 부분이 없고 완벽하다면 "errors" 배열을 빈 배열 []로 보내줘.
+
+[분석할 문장]
+"${text}"`;
+
+      try {
+        // 2. Apps Script를 경유하여 ChatGPT API 호출
+        const response = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify({ question: structuredPrompt })
+        });
+        const aiData = await response.json();
+
+        if (aiData.error) throw new Error(aiData.error);
+
+        // ChatGPT 대답에서 마크다운 백틱(\`\`\`json)이 섞여 나올 경우를 대비한 가공 처리
+        let cleanJsonText = aiData.answer.trim();
+        if (cleanJsonText.startsWith("```")) {
+          cleanJsonText = cleanJsonText.replace(/```json|```/g, "").trim();
+        }
+
+        // JSON 객체로 파싱
+        const parsedData = JSON.parse(cleanJsonText);
+
+        // 3. UI 화면에 뿌려주기
+        resOriginal.innerText = parsedData.original || text;
+        resCorrected.innerText = parsedData.corrected || '';
+        
+        resErrors.innerHTML = '';
+        if (!parsedData.errors || parsedData.errors.length === 0) {
+          resErrors.innerHTML = '<li>🎉 틀린 부분 없이 완벽한 문장입니다!</li>';
+        } else {
+          parsedData.errors.forEach(err => {
+            const li = document.createElement('li');
+            li.innerText = err;
+            resErrors.appendChild(li);
+          });
+        }
+        resultSection.classList.remove('hidden');
+
+        // 4. Firebase Realtime Database REST API를 이용하여 사용자 UID별로 기록 저장
+        // 데이터 경로: 저장소/history/유저UID/랜덤생성ID.json
+        const dbEndpoint = `${firebaseConfig.databaseURL}/history/${currentUser.uid}.json`;
+        
+        const savePayload = {
+          language: language,
+          original: parsedData.original || text,
+          corrected: parsedData.corrected || '',
+          errors: parsedData.errors || [],
+          createdAt: new Date().toLocaleString('ko-KR')
+        };
+
+        await fetch(dbEndpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(savePayload)
+        });
+
+      } catch (error) {
+        console.error(error);
+        alert('AI 분석 또는 DB 저장 중 오류가 발생했습니다.\n이유: ' + error.message);
+      } finally {
+        analyzeBtn.innerText = 'AI 첨삭 시작';
+        analyzeBtn.disabled = false;
+      }
+    });
+
+    function getKoreanErrorMessage(code) {
+      switch (code) {
+        case 'auth/email-already-in-use': return '이미 가입된 이메일입니다.';
+        case 'auth/invalid-email': return '이메일 형식이 올바르지 않습니다.';
+        case 'auth/weak-password': return '비밀번호가 너무 약합니다. 6자리 이상으로 입력해주세요.';
+        case 'auth/user-not-found': return '가입되지 않은 이메일입니다.';
+        case 'auth/wrong-password': return '비밀번호가 올바르지 않습니다.';
+        case 'auth/invalid-credential': return '이메일 또는 비밀번호가 올바르지 않습니다.';
+        case 'auth/network-request-failed': return '네트워크 연결을 확인해주세요.';
+        default: return `오류가 발생했습니다: ${code}`;
+      }
+    }
   </script>
 </body>
 </html>
