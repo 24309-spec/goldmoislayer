@@ -3,9 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI 외국어 첨삭기</title>
+  <title>Firebase 로그인 데이터 관리</title>
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       min-height: 100vh;
@@ -13,6 +16,7 @@
       font-family: Arial, sans-serif;
       color: #333;
     }
+
     .container {
       width: min(900px, 92%);
       margin: 40px auto;
@@ -21,24 +25,47 @@
       padding: 28px;
       box-shadow: 0 15px 35px rgba(0, 0, 0, 0.16);
     }
-    h1 { margin: 0 0 8px; text-align: center; font-size: 28px; }
-    h2 { margin-top: 0; font-size: 22px; }
-    .subtitle { text-align: center; color: #777; margin-bottom: 28px; font-size: 14px; }
-    .auth-box { max-width: 420px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
-    input, select, textarea {
+
+    h1 {
+      margin: 0 0 8px;
+      text-align: center;
+      font-size: 28px;
+    }
+
+    h2 {
+      margin-top: 0;
+      font-size: 22px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #777;
+      margin-bottom: 28px;
+      font-size: 14px;
+    }
+
+    .auth-box {
+      max-width: 420px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    input {
       height: 46px;
       padding: 0 14px;
       border: 1px solid #ddd;
       border-radius: 12px;
       font-size: 15px;
       outline: none;
-      font-family: Arial, sans-serif;
     }
-    textarea { height: 100px; padding: 12px; resize: vertical; }
-    input:focus, select:focus, textarea:focus {
+
+    input:focus {
       border-color: #42a5f5;
       box-shadow: 0 0 0 3px rgba(66, 165, 245, 0.15);
     }
+
     button {
       border: none;
       border-radius: 12px;
@@ -49,11 +76,65 @@
       transition: 0.15s;
       font-weight: bold;
     }
-    button:hover { transform: translateY(-2px); opacity: 0.9; }
-    .login-btn { background: #42a5f5; color: white; }
-    .signup-btn { background: #7e57c2; color: white; }
-    .logout-btn { background: #455a64; color: white; }
-    .add-btn { background: #42a5f5; color: white; }
+
+    button:hover {
+      transform: translateY(-2px);
+      opacity: 0.9;
+    }
+
+    .login-btn {
+      background: #42a5f5;
+      color: white;
+    }
+
+    .signup-btn {
+      background: #7e57c2;
+      color: white;
+    }
+
+    .logout-btn {
+      background: #455a64;
+      color: white;
+    }
+
+    .add-btn {
+      background: #42a5f5;
+      color: white;
+    }
+
+    .refresh-btn {
+      background: #66bb6a;
+      color: white;
+      margin-bottom: 16px;
+    }
+
+    .edit-btn {
+      background: #ffca28;
+      color: #333;
+    }
+
+    .delete-btn {
+      background: #ef5350;
+      color: white;
+    }
+
+    .save-btn {
+      background: #7e57c2;
+      color: white;
+    }
+
+    .cancel-btn {
+      background: #b0bec5;
+      color: white;
+    }
+
+    .form-box {
+      display: grid;
+      grid-template-columns: 1fr 2fr auto;
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+
     .top-bar {
       display: flex;
       justify-content: space-between;
@@ -64,105 +145,67 @@
       border-radius: 16px;
       background: #f7f9fb;
     }
-    .user-info { font-size: 14px; color: #555; word-break: break-all; }
-    .form-box { display: grid; grid-template-columns: 1.5fr 3fr auto; gap: 10px; margin-bottom: 22px; }
-    
-    /* 결과창 디자인 수정 */
-    .result-card { padding: 20px; border-radius: 16px; background: #f7f9fb; border: 1px solid #edf1f5; margin-top: 20px; }
-    .res-title { font-weight: bold; margin: 10px 0 4px; color: #455a64; }
-    .corrected-text { color: #2e7d32; font-weight: bold; font-size: 18px; background: #e8f5e9; padding: 10px; border-radius: 8px; margin: 4px 0; }
-    .error-list { color: #c62828; padding-left: 20px; line-height: 1.6; }
-    
-    .hidden { display: none; }
-    .notice { max-width: 620px; margin: 20px auto 0; padding: 14px; border-radius: 14px; background: #fff8e1; color: #6d4c41; font-size: 14px; line-height: 1.6; }
-    @media (max-width: 700px) {
-      .form-box, .top-bar { grid-template-columns: 1fr; flex-direction: column; align-items: stretch; }
+
+    .user-info {
+      font-size: 14px;
+      color: #555;
+      word-break: break-all;
     }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>🌐 AI 외국어 문장 교정기</h1>
-    <div class="subtitle">Firebase Authentication 연동 테스트 (1단계)</div>
 
-    <section id="authSection">
-      <div class="auth-box">
-        <h2>로그인 / 회원가입</h2>
-        <input id="emailInput" type="email" placeholder="이메일" />
-        <input id="passwordInput" type="password" placeholder="비밀번호 6자리 이상" />
-        <button class="login-btn" id="loginBtn">로그인</button>
-        <button class="signup-btn" id="signupBtn">회원가입</button>
-      </div>
-      <div class="notice">
-        처음 사용하는 이메일은 회원가입을 먼저 누르세요.<br />
-        이미 가입한 이메일은 로그인 버튼을 누르면 됩니다.
-      </div>
-    </section>
+    .status {
+      min-height: 24px;
+      margin-bottom: 14px;
+      color: #555;
+      font-size: 14px;
+    }
 
-    <section id="mainSection" class="hidden">
-      <div class="top-bar">
-        <div class="user-info">
-          로그인 계정: <strong id="userEmail"></strong>
-        </div>
-        <button class="logout-btn" id="logoutBtn">로그아웃</button>
-      </div>
+    .list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
 
-      <div class="form-box">
-        <select id="langSelect">
-          <option value="English">영어 (English)</option>
-          <option value="Japanese">일본어 (日本語)</option>
-        </select>
-        <textarea id="textInput" placeholder="분석할 외국어 문장을 입력하세요..."></textarea>
-        <button class="add-btn" id="analyzeBtn">AI 첨삭 시작</button>
-      </div>
+    .item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 16px;
+      border-radius: 16px;
+      background: #f7f9fb;
+      border: 1px solid #edf1f5;
+    }
 
-      <div id="resultSection" class="result-card hidden">
-        <h2>🔍 AI 분석 결과</h2>
-        <div class="res-title">입력한 원문</div>
-        <div id="resOriginal" style="color: #555; font-style: italic; margin-bottom: 15px;"></div>
-        
-        <div class="res-title">✨ AI 수정본</div>
-        <div id="resCorrected" class="corrected-text"></div>
-        
-        <div class="res-title">❌ 틀린 이유 분석</div>
-        <ul id="resErrors" class="error-list"></ul>
-      </div>
-    </section>
-  </div>
+    .item-title {
+      margin: 0 0 6px;
+      font-size: 18px;
+      font-weight: bold;
+    }
 
-  <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-    import {
-      getAuth,
-      createUserWithEmailAndPassword,
-      signInWithEmailAndPassword,
-      signOut,
-      onAuthStateChanged
-    } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+    .item-content {
+      margin: 0;
+      color: #555;
+      line-height: 1.5;
+      word-break: break-all;
+    }
 
-    // 네 goldmoislayer 프로젝트 정보 고정
-    const firebaseConfig = {
-      apiKey: "AIzaSyA_3R0IqaFBLLLstnQ7kZQAiPsZRR2GIEM",
-      authDomain: "goldmoislayer.firebaseapp.com",
-      databaseURL: "https://goldmoislayer-default-rtdb.firebaseio.com",
-      projectId: "goldmoislayer",
-      storageBucket: "goldmoislayer.firebasestorage.app",
-      messagingSenderId: "637343880273",
-      appId: "1:637343880273:web:0383ca3e92a860ca739470",
-      measurementId: "G-5W6B3EGXCX"
-    };
+    .item-date {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #999;
+    }
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+    .item-actions {
+      display: flex;
+      gap: 8px;
+    }
 
-    const authSection = document.getElementById('authSection');
-    const mainSection = document.getElementById('mainSection');
-    const resultSection = document.getElementById('resultSection');
+    .edit-box {
+      display: grid;
+      grid-template-columns: 1fr 2fr auto auto;
+      gap: 8px;
+      width: 100%;
+    }
 
-    const emailInput = document.getElementById('emailInput');
-    const passwordInput = document.getElementById('passwordInput');
-    const loginBtn = document.getElementById('loginBtn');
-    const signupBtn = document.getElementById('signupBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
-
-    const user
+    .empty {
+      text-align: center;
