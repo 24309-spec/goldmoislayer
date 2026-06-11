@@ -335,8 +335,8 @@
     const auth = firebase.auth();
     const database = firebase.database();
 
-    // 🔴 중요: 여기에 네가 구글에서 발급받은 진짜 Apps Script URL을 넣어줘!
-    const APPS_SCRIPT_URL = '여기에_Apps_Script_주소_넣기';
+    // 🟢 여기에 네 구글 주소가 완벽하게 들어가 있어!
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwURzzLfafRBRyOr1bYLis0sgop7CLQdWGCprznfBfMXA_HlAJwClU_ZS_JACuo6Cst/exec';
 
     const authSection = document.getElementById('authSection');
     const mainSection = document.getElementById('mainSection');
@@ -353,7 +353,6 @@
     const dataList = document.getElementById('dataList');
     const statusBox = document.getElementById('status');
 
-    // ChatGPT 관련 요소
     const questionInput = document.getElementById('questionInput');
     const answerBox = document.getElementById('answerBox');
     const askBtn = document.getElementById('askBtn');
@@ -459,17 +458,12 @@
       } catch (error) { alert('데이터 추가 실패'); }
     }
 
-    // 🤖 ChatGPT 연동 로직 코드 합체
     askBtn.addEventListener('click', askChatGPT);
     clearBtn.addEventListener('click', clearPage);
 
     async function askChatGPT() {
       const question = questionInput.value.trim();
       if (!question) { alert('질문을 입력해주세요.'); return; }
-      if (APPS_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbwURzzLfafRBRyOr1bYLis0sgop7CLQdWGCprznfBfMXA_HlAJwClU_ZS_JACuo6Cst/exec') {
-        alert('Apps Script 주소가 입력되지 않았습니다. 코드 내부에서 주소를 설정해주세요.');
-        return;
-      }
 
       try {
         setLoading(true);
@@ -505,7 +499,6 @@
       answerBox.textContent = '아직 질문이 없습니다. 답변 내용은 구글 스프레드시트에도 자동 저장됩니다.';
     }
 
-    // 기존 데이터 렌더링 및 유틸리티 함수 유지
     window.deleteData = async function(id) {
       if (!currentUser || !confirm('정말 삭제하시겠습니까?')) return;
       try { await database.ref(`users/${currentUser.uid}/items/${id}`).remove(); } catch (error) { alert('삭제 실패'); }
