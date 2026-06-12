@@ -461,6 +461,7 @@
     askBtn.addEventListener('click', askChatGPT);
     clearBtn.addEventListener('click', clearPage);
 
+    // 🟢 변경된 부분: ChatGPT 답변을 Firebase에 자동 저장하는 로직
     async function askChatGPT() {
       const question = questionInput.value.trim();
       if (!question) { alert('질문을 입력해주세요.'); return; }
@@ -478,8 +479,23 @@
         const data = await response.json();
         if (data.error) throw new Error(data.error);
 
-        answerBox.textContent = data.answer || '답변을 가져오지 못했습니다.';
-        setStatus('답변 생성 완료 및 스프레드시트 기록 완료');
+        const answer = data.answer || '답변을 가져오지 못했습니다.';
+        answerBox.textContent = answer;
+        
+        // Firebase '나만의 실시간 메모장'에 자동 저장하기
+        if (currentUser) {
+          const itemsRef = database.ref(`users/${currentUser.uid}/items`);
+          await itemsRef.push().set({
+            title: `[ChatGPT 질문] ${question}`, // 제목에는 내가 한 질문
+            content: answer,                     // 내용에는 AI의 답변
+            createdAt: new Date().toLocaleString('ko-KR'),
+            updatedAt: ''
+          });
+          setStatus('답변 생성 및 Firebase 자동 저장 완료!');
+        } else {
+          setStatus('답변 생성 완료 (스프레드시트 기록됨)');
+        }
+
       } catch (error) {
         console.error(error);
         answerBox.textContent = '오류가 발생했습니다.\n\n' + error.message;
@@ -530,45 +546,4 @@
           </div>
           <div class="item-actions">
             <button class="edit-btn" onclick="showEditForm('${id}', '${escapeForAttribute(item.title || '')}', '${escapeForAttribute(item.content || '')}')">수정</button>
-            <button class="delete-btn" onclick="deleteData('${id}')">삭제</button>
-          </div>
-        `;
-        dataList.appendChild(div);
-      });
-    }
-
-    window.showEditForm = function(id, title, content) {
-      document.getElementById(`item-${id}`).innerHTML = `
-        <div class="edit-box">
-          <input id="edit-title-${id}" type="text" value="${title}" />
-          <input id="edit-content-${id}" type="text" value="${content}" />
-          <button class="save-btn" onclick="updateData('${id}')">저장</button>
-          <button class="cancel-btn" onclick="startRealtimeDataListener(currentUser.uid)">취소</button>
-        </div>
-      `;
-    };
-
-    function escapeHTML(text) {
-      return String(text).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
-    }
-    function escapeForAttribute(text) { return escapeHTML(text).replaceAll('`', '&#096;'); }
-
-    function getKoreanErrorMessage(code) {
-      switch (code) {
-        case 'auth/email-already-in-use': return '이미 가입된 이메일입니다.';
-        case 'auth/invalid-email': return '이메일 형식이 올바르지 않습니다.';
-        case 'auth/weak-password': return '비밀번호는 6자리 이상으로 입력해주세요.';
-        case 'auth/user-not-found': case 'auth/wrong-password': case 'auth/invalid-credential': return '이메일 또는 비밀번호가 올바르지 않습니다.';
-        default: return `오류가 발생했습니다: ${code}`;
-      }
-    }
-
-    document.addEventListener('keydown', function(event) {
-      if (event.key !== 'Enter') return;
-      const activeId = document.activeElement.id;
-      if (activeId === 'emailInput' || activeId === 'passwordInput') loginBtn.click();
-      if (activeId === 'titleInput' || activeId === 'contentInput') addBtn.click();
-    });
-  </script>
-</body>
-</html>
+            <button class="delete-btn" onclick="deleteData('${id}')">삭제
