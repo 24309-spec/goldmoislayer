@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Firebase 로그인 & ChatGPT 관리</title>
+  <title>문법 검사기</title>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -75,8 +75,8 @@
 </head>
 <body>
   <div class="container">
-    <h1>Firebase & ChatGPT 통합 시스템</h1>
-    <div class="subtitle">Authentication + Realtime DB + Google Apps Script 연동</div>
+    <h1>문법 검사기</h1>
+    <div class="subtitle">AI 문법 교정 + 나만의 오답 노트 실시간 저장 시스템</div>
 
     <section id="authSection">
       <div class="auth-box">
@@ -129,7 +129,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
   <script>
-    // Firebase 초기화 (건드리지 않음)
+    // Firebase 초기화
     const firebaseConfig = {
       apiKey: "AIzaSyA_3R0IqaFBLLLstnQ7kZQAiPsZRR2GIEM",
       authDomain: "goldmoislayer.firebaseapp.com",
@@ -144,7 +144,7 @@
     const auth = firebase.auth();
     const database = firebase.database();
 
-    // 앱스 스크립트 주소 (건드리지 않음)
+    // 앱스 스크립트 주소
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzn9di13ViePS6BxZU_CEOVw6aZBu8ZYJR_YTYMCvcDbdjX6jN6elptTkAlHXtdI0_4/exec';
 
     // DOM 요소 선택
@@ -180,7 +180,7 @@
       return { email, password };
     }
 
-    // 로그인 & 로그아웃 로직 (건드리지 않음)
+    // 로그인 & 회원가입 로직
     signupBtn.addEventListener('click', async () => {
       const account = getEmailAndPassword();
       if (!account) return;
@@ -228,7 +228,7 @@
       clearPage();
     }
 
-    // 실시간 데이터베이스 로직 (건드리지 않음)
+    // 실시간 데이터베이스 로직
     function startRealtimeDataListener(uid) {
       stopRealtimeDataListener();
       setStatus('데이터를 불러오는 중입니다...');
@@ -269,7 +269,7 @@
     askBtn.addEventListener('click', askChatGPT);
     clearBtn.addEventListener('click', clearPage);
 
-    // 🟢 핵심! ChatGPT에게 물어본 뒤 Firebase에 자동 저장되게 수정한 부분 🟢
+    // ChatGPT에게 질문 및 Firebase 연동 자동 저장
     async function askChatGPT() {
       const question = questionInput.value.trim();
       if (!question) { alert('질문을 입력해주세요.'); return; }
@@ -287,16 +287,14 @@
         const data = await response.json();
         if (data.error) throw new Error(data.error);
 
-        // 답변 결과 표시
         const answer = data.answer || '답변을 가져오지 못했습니다.';
         answerBox.textContent = answer;
 
-        // 👇 로그인 되어있다면 Firebase "나만의 실시간 메모장"에 자동 추가!
         if (currentUser) {
           const itemsRef = database.ref(`users/${currentUser.uid}/items`);
           await itemsRef.push().set({
-            title: `[ChatGPT 질문] ${question}`, // 제목에는 질문 내용
-            content: answer,                     // 내용에는 AI 답변 내용
+            title: `[ChatGPT 질문] ${question}`, 
+            content: answer,                     
             createdAt: new Date().toLocaleString('ko-KR'),
             updatedAt: ''
           });
