@@ -44,6 +44,7 @@
     .cancel-btn { background: #b0bec5; color: white; }
     .clear-btn { background: #b0bec5; color: white; }
     .ask-btn { background: #26a69a; color: white; }
+    .tts-btn { background: #ab47bc; color: white; margin-top: 10px; } /* TTS 버튼 스타일 추가 */
 
     .form-box { display: grid; grid-template-columns: 1fr 2fr auto; gap: 10px; margin-bottom: 22px; }
     .top-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 22px; padding: 14px; border-radius: 16px; background: #f7f9fb; }
@@ -58,13 +59,13 @@
     .item-actions { display: flex; gap: 8px; }
     .edit-box { display: grid; grid-template-columns: 1fr 2fr auto auto; gap: 8px; width: 100%; }
     .empty { text-align: center; padding: 30px; color: #888; background: #f7f9fb; border-radius: 16px; }
-    .hidden { display: none; }
+    .hidden { display: none !important; }
     .notice { max-width: 620px; margin: 20px auto 0; padding: 14px; border-radius: 14px; background: #fff8e1; color: #6d4c41; font-size: 14px; line-height: 1.6; }
 
     .chat-section { margin-top: 32px; padding-top: 24px; border-top: 2px dashed #e0e0e0; }
     .answer-box { min-height: 150px; padding: 18px; border-radius: 18px; background: #f1f8e9; border: 1px solid #dcedc8; line-height: 1.7; white-space: pre-wrap; word-break: break-word; margin-top: 8px; }
     .button-row { display: flex; gap: 10px; justify-content: flex-end; margin: 10px 0; }
-    .label { font-weight: bold; margin-bottom: 6px; }
+    .label { font-weight: bold; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
 
     @media (max-width: 700px) {
       .form-box, .item, .edit-box, .top-bar, .button-row { grid-template-columns: 1fr; flex-direction: column; align-items: stretch; }
@@ -76,7 +77,7 @@
 <body>
   <div class="container">
     <h1>문법 검사기</h1>
-    <div class="subtitle">AI 문법 교정 + 나만의 오답 노트 실시간 저장 시스템</div>
+    <div class="subtitle">AI 문법 교정 + 나만의 오답 노트 실시간 저장 + 음성 읽기 시스템</div>
 
     <section id="authSection">
       <div class="auth-box">
@@ -110,15 +111,20 @@
         <h2>🤖 ChatGPT AI 어시스턴트</h2>
         <div>
           <div class="label">질문 입력</div>
-          <textarea id="questionInput" placeholder="ChatGPT에게 궁금한 점을 질문해보세요!"></textarea>
+          <textarea id="questionInput" placeholder="ChatGPT에게 교정받을 문장이나 질문을 입력해보세요!"></textarea>
         </div>
         <div class="button-row">
           <button class="clear-btn" id="clearBtn">초기화</button>
           <button class="ask-btn" id="askBtn">ChatGPT에게 질문하기</button>
         </div>
         <div>
-          <div class="label">AI 답변 결과</div>
+          <div class="label">
+            AI 답변 결과
+          </div>
           <div id="answerBox" class="answer-box">아직 질문이 없습니다. 질문을 입력하고 버튼을 누르면 답변이 생성되며, 위쪽 메모장 목록에 자동으로 저장됩니다.</div>
+          
+          <button class="tts-btn hidden" id="ttsBtn">🔊 답변 읽어주기</button>
+          <audio id="audioPlayer" controls class="hidden" style="width: 100%; margin-top: 10px;"></audio>
         </div>
       </div>
     </section>
@@ -144,8 +150,9 @@
     const auth = firebase.auth();
     const database = firebase.database();
 
-    // 앱스 스크립트 주소
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzn9di13ViePS6BxZU_CEOVw6aZBu8ZYJR_YTYMCvcDbdjX6jN6elptTkAlHXtdI0_4/exec';
+    // 두 개의 앱스 스크립트 주소 (ChatGPT용 / TTS용)
+    const APPS_SCRIPT_URL_GPT = 'https://script.google.com/macros/s/AKfycbzn9di13ViePS6BxZU_CEOVw6aZBu8ZYJR_YTYMCvcDbdjX6jN6elptTkAlHXtdI0_4/exec';
+    const APPS_SCRIPT_URL_TTS = 'https://script.google.com/macros/s/AKfycbxDNMIktE288seW2Mr5YgksYFeAP3SNl8YyQZFa1DuvD0N_8pjRLDmxkZBYyQ4WGPmt/exec';
 
     // DOM 요소 선택
     const authSection = document.getElementById('authSection');
@@ -166,6 +173,10 @@
     const answerBox = document.getElementById('answerBox');
     const askBtn = document.getElementById('askBtn');
     const clearBtn = document.getElementById('clearBtn');
+    
+    // TTS 요소 선택
+    const ttsBtn = document.getElementById('ttsBtn');
+    const audioPlayer = document.getElementById('audioPlayer');
 
     let currentUser = null;
     let currentItemsRef = null;
@@ -274,12 +285,17 @@
       const question = questionInput.value.trim();
       if (!question) { alert('질문을 입력해주세요.'); return; }
 
+      // 오디오 초기화
+      ttsBtn.classList.add('hidden');
+      audioPlayer.classList.add('hidden');
+      audioPlayer.src = '';
+
       try {
         setLoading(true);
         answerBox.textContent = '답변을 생성하는 중입니다...';
         setStatus('Apps Script 서버에 요청을 보냈습니다.');
 
-        const response = await fetch(APPS_SCRIPT_URL, {
+        const response = await fetch(APPS_SCRIPT_URL_GPT, {
           method: 'POST',
           body: JSON.stringify({ question: question })
         });
@@ -293,7 +309,7 @@
         if (currentUser) {
           const itemsRef = database.ref(`users/${currentUser.uid}/items`);
           await itemsRef.push().set({
-            title: `[ChatGPT 질문] ${question}`, 
+            title: `[문법 검사] ${question}`, 
             content: answer,                     
             createdAt: new Date().toLocaleString('ko-KR'),
             updatedAt: ''
@@ -302,6 +318,9 @@
         } else {
           setStatus('답변이 성공적으로 생성되었습니다.');
         }
+
+        // 답변이 완성되었으므로 TTS 버튼 노출
+        ttsBtn.classList.remove('hidden');
 
       } catch (error) {
         console.error(error);
@@ -312,6 +331,65 @@
       }
     }
 
+    // 🟢 TTS 음성 생성 및 재생 로직 🟢
+    ttsBtn.addEventListener('click', async () => {
+      const textToRead = answerBox.textContent;
+      if (!textToRead || textToRead === '답변을 생성하는 중입니다...') return;
+
+      try {
+        ttsBtn.disabled = true;
+        ttsBtn.textContent = '🔊 음성 준비 중...';
+        audioPlayer.classList.add('hidden');
+
+        const response = await fetch(APPS_SCRIPT_URL_TTS, {
+          method: 'POST',
+          body: JSON.stringify({
+            type: 'tts',
+            text: textToRead,
+            model: 'tts-1',
+            voice: 'alloy', // 기본 목소리
+            speed: 1.0      // 기본 속도
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.error) throw new Error(data.error);
+        if (!data.audioBase64) throw new Error('음성 데이터를 받지 못했습니다.');
+
+        const audioUrl = base64ToAudioUrl(data.audioBase64, 'audio/mpeg');
+        audioPlayer.src = audioUrl;
+        audioPlayer.classList.remove('hidden');
+        audioPlayer.play(); // 자동 재생
+
+      } catch (error) {
+        console.error(error);
+        alert('음성 변환에 실패했습니다.\n\n' + error.message);
+      } finally {
+        ttsBtn.disabled = false;
+        ttsBtn.textContent = '🔊 다시 읽어주기';
+      }
+    });
+
+    // Base64를 Audio URL로 변환해주는 함수
+    function base64ToAudioUrl(base64, mimeType) {
+      const byteCharacters = atob(base64);
+      const byteArrays = [];
+
+      for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+        const slice = byteCharacters.slice(offset, offset + 512);
+        const byteNumbers = new Array(slice.length);
+        for (let i = 0; i < slice.length; i++) {
+          byteNumbers[i] = slice.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        byteArrays.push(byteArray);
+      }
+
+      const blob = new Blob(byteArrays, { type: mimeType });
+      return URL.createObjectURL(blob);
+    }
+
     function setLoading(isLoading) {
       askBtn.disabled = isLoading;
       askBtn.textContent = isLoading ? '생성 중...' : 'ChatGPT에게 질문하기';
@@ -320,6 +398,9 @@
     function clearPage() {
       questionInput.value = '';
       answerBox.textContent = '아직 질문이 없습니다. 질문을 입력하고 버튼을 누르면 답변이 생성되며, 위쪽 메모장 목록에 자동으로 저장됩니다.';
+      ttsBtn.classList.add('hidden');
+      audioPlayer.classList.add('hidden');
+      audioPlayer.src = '';
     }
 
     // 수정 및 삭제 로직
